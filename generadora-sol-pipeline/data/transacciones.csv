@@ -1,0 +1,13 @@
+﻿ID Transacción,Fecha,Tipo de Transacción,Nombre Cliente/Proveedor,Tipo de Energía,Cantidad (MWh),Precio Unitario (COP),Total (COP)
+T001,2025-01-05,Venta,Industrias Metálicas S.A.,Eólica,1200,350000,
+T002,2025-01-12,Compra,EólicaAndes S.A.,Eólica,800,280000,
+T003,2025-01-18,Venta,Constructora del Caribe S.A.S.,Hidroeléctrica,2000,320000,
+T004,2025-02-03,Compra,HidroNorte Ltda.,Hidroeléctrica,1500,295000,
+T005,2025-02-14,Venta,Agro Exportaciones Ltda.,Nuclear,3000,410000,
+T006,2025-02-21,Compra,NuclearTech Corp.,Nuclear,2500,390000,
+T007,2025-03-08,Venta,Textiles del Pacífico S.A.,Eólica,950,355000,
+T008,2025-03-15,Compra,Vientos del Sur S.A.S.,Eólica,700,270000,
+T009,2025-03-22,Venta,Carlos Andrés Martínez,Hidroeléctrica,400,310000,
+T010,2025-04-01,Compra,AguaPura Generación,Hidroeléctrica,1800,300000,
+T011,2025-04-10,Venta,Laura Sofía Pérez,Eólica,200,340000,
+T012,2025-04-18,Compra,AtomEnergy S.A.,Nuclear,3200,400000,

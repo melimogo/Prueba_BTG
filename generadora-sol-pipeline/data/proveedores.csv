@@ -1,0 +1,9 @@
+﻿ID Proveedor,Nombre Proveedor,Tipo de Energía,País,Capacidad (MW),Estado
+P001,EólicaAndes S.A.,Eólica,Colombia,250,Activo
+P002,HidroNorte Ltda.,Hidroeléctrica,Colombia,500,Activo
+P003,NuclearTech Corp.,Nuclear,Argentina,1000,Activo
+P004,Vientos del Sur S.A.S.,Eólica,Chile,180,Activo
+P005,Represa Central Ltda.,Hidroeléctrica,Colombia,320,Inactivo
+P006,AtomEnergy S.A.,Nuclear,Brasil,800,Activo
+P007,AireClean Corp.,Eólica,Perú,150,Activo
+P008,AguaPura Generación,Hidroeléctrica,Ecuador,420,Activo
