@@ -1,0 +1,147 @@
+{
+	"jobConfig": {
+		"name": "generadora-sol-etl",
+		"description": "",
+		"role": "arn:aws:iam::350471274058:role/ETL-Prueba",
+		"command": "glueetl",
+		"version": "5.0",
+		"runtime": null,
+		"workerType": "G.1X",
+		"numberOfWorkers": 2,
+		"maxCapacity": 2,
+		"jobRunQueuingEnabled": false,
+		"maxRetries": 0,
+		"timeout": 480,
+		"maxConcurrentRuns": 1,
+		"security": "none",
+		"scriptName": "generadora-sol-etl.py",
+		"scriptLocation": "s3://aws-glue-assets-350471274058-us-east-2/scripts/",
+		"language": "python-3",
+		"spark": true,
+		"sparkConfiguration": "standard",
+		"jobParameters": [
+			{
+				"key": "--conf",
+				"value": "spark.eventLog.rolling.enabled=true",
+				"existing": false
+			}
+		],
+		"tags": [],
+		"jobMode": "DEVELOPER_MODE",
+		"createdOn": "2026-03-06T12:36:50.775Z",
+		"developerMode": true,
+		"connectionsList": [],
+		"temporaryDirectory": "s3://aws-glue-assets-350471274058-us-east-2/temporary/",
+		"glueHiveMetastore": true,
+		"etlAutoTuning": true,
+		"metrics": true,
+		"observabilityMetrics": true,
+		"bookmark": "job-bookmark-disable",
+		"sparkPath": "s3://aws-glue-assets-350471274058-us-east-2/sparkHistoryLogs/",
+		"flexExecution": false,
+		"minFlexWorkers": null,
+		"maintenanceWindow": null
+	},
+	"dag": {
+		"node-1772800445209": {
+			"nodeId": "node-1772800445209",
+			"dataPreview": false,
+			"previewAmount": 0,
+			"inputs": [],
+			"name": "Amazon S3",
+			"generatedNodeName": "AmazonS3_node1772800445209",
+			"classification": "DataSource",
+			"type": "S3",
+			"isCatalog": false,
+			"format": "csv",
+			"paths": [
+				"s3://generadora-sol-raw/clientes.csv"
+			],
+			"compressionType": null,
+			"exclusions": [],
+			"groupFiles": null,
+			"groupSize": null,
+			"recurse": true,
+			"maxBand": null,
+			"maxFilesInBand": null,
+			"additionalOptions": {
+				"boundedSize": null,
+				"boundedFiles": null,
+				"enableSamplePath": false,
+				"samplePath": "s3://generadora-sol-raw/clientes.csv",
+				"boundedOption": null
+			},
+			"separator": ",",
+			"escaper": "",
+			"quoteChar": "\"",
+			"multiline": null,
+			"withHeader": true,
+			"writeHeader": null,
+			"skipFirst": null,
+			"optimizePerformance": false,
+			"outputSchemas": [
+				[
+					{
+						"key": "Tipo de Identificación",
+						"fullPath": [
+							"Tipo de Identificación"
+						],
+						"type": "string",
+						"glueStudioType": null,
+						"children": null
+					},
+					{
+						"key": "Número de Identificación",
+						"fullPath": [
+							"Número de Identificación"
+						],
+						"type": "string",
+						"glueStudioType": null,
+						"children": null
+					},
+					{
+						"key": "Nombre Completo",
+						"fullPath": [
+							"Nombre Completo"
+						],
+						"type": "string",
+						"glueStudioType": null,
+						"children": null
+					},
+					{
+						"key": "Ciudad",
+						"fullPath": [
+							"Ciudad"
+						],
+						"type": "string",
+						"glueStudioType": null,
+						"children": null
+					},
+					{
+						"key": "Departamento",
+						"fullPath": [
+							"Departamento"
+						],
+						"type": "string",
+						"glueStudioType": null,
+						"children": null
+					},
+					{
+						"key": "Correo Electrónico",
+						"fullPath": [
+							"Correo Electrónico"
+						],
+						"type": "string",
+						"glueStudioType": null,
+						"children": null
+					}
+				]
+			],
+			"calculatedType": "",
+			"codeGenVersion": 2
+		}
+	},
+	"hasBeenSaved": false,
+	"usageProfileName": null,
+	"script": "import sys\r\nfrom awsglue.transforms import *\r\nfrom awsglue.utils import getResolvedOptions\r\nfrom pyspark.context import SparkContext\r\nfrom awsglue.context import GlueContext\r\nfrom awsglue.job import Job\r\nfrom pyspark.sql.functions import (\r\n    col, trim, upper, lower, to_date, coalesce,\r\n    regexp_replace, when, year, month, length,\r\n    round as spark_round\r\n)\r\nfrom pyspark.sql.types import DoubleType, IntegerType\r\nimport logging\r\n\r\n# ─────────────────────────────────────────────────────────────────────────────\r\n# CONFIGURACIÓN DEL JOB\r\n# ─────────────────────────────────────────────────────────────────────────────\r\nargs = getResolvedOptions(sys.argv, ['JOB_NAME'])\r\n\r\nsc          = SparkContext()\r\nglueContext = GlueContext(sc)\r\nspark       = glueContext.spark_session\r\njob         = Job(glueContext)\r\njob.init(args['JOB_NAME'], args)\r\n\r\nlogger = logging.getLogger()\r\nlogger.setLevel(logging.INFO)\r\n\r\n# ─────────────────────────────────────────────────────────────────────────────\r\n# PARÁMETROS — ajusta los nombres de tus buckets aquí\r\n# ─────────────────────────────────────────────────────────────────────────────\r\nS3_RAW_PROVEEDORES   = \"s3://generadora-sol-raw/proveedores.csv\"\r\nS3_RAW_CLIENTES      = \"s3://generadora-sol-raw/clientes.csv\"\r\nS3_RAW_TRANSACCIONES = \"s3://generadora-sol-raw/transacciones.csv\"\r\n\r\nS3_PROC_PROVEEDORES   = \"s3://generadora-sol-processed/proveedores/\"\r\nS3_PROC_CLIENTES      = \"s3://generadora-sol-processed/clientes/\"\r\nS3_PROC_TRANSACCIONES = \"s3://generadora-sol-processed/transacciones/\"\r\n\r\n\r\n# =============================================================================\r\n# UTILIDADES\r\n# =============================================================================\r\n\r\ndef leer_csv(path, nombre):\r\n    logger.info(f\"[{nombre}] Leyendo desde: {path}\")\r\n    df = spark.read \\\r\n        .option(\"header\",      \"true\") \\\r\n        .option(\"inferSchema\", \"true\") \\\r\n        .option(\"encoding\",    \"UTF-8\") \\\r\n        .option(\"sep\",         \",\") \\\r\n        .csv(path)\r\n    logger.info(f\"[{nombre}] RAW: {df.count():,} registros | {len(df.columns)} columnas\")\r\n    return df\r\n\r\n\r\ndef guardar_parquet(df, path, particiones, nombre):\r\n    logger.info(f\"[{nombre}] Guardando Parquet en: {path}\")\r\n    df.write.mode(\"overwrite\").partitionBy(*particiones).parquet(path)\r\n    logger.info(f\"[{nombre}] Guardado exitosamente.\")\r\n\r\n\r\n# =============================================================================\r\n# 1. PROVEEDORES\r\n#    Columnas: ID Proveedor, Nombre Proveedor, Tipo de Energía,\r\n#              País, Capacidad (MW), Estado\r\n# =============================================================================\r\n\r\ndef transformar_proveedores():\r\n    nombre = \"PROVEEDORES\"\r\n    df = leer_csv(S3_RAW_PROVEEDORES, nombre)\r\n\r\n    # 1. Eliminar duplicados\r\n    df = df.dropDuplicates()\r\n\r\n    # 2. Filtrar nulos en campos críticos\r\n    df = df.filter(\r\n        col(\"ID Proveedor\").isNotNull() &\r\n        col(\"Nombre Proveedor\").isNotNull()\r\n    )\r\n\r\n    # 3. Estandarizar texto\r\n    df = df.withColumn(\"id_proveedor\",\r\n        trim(upper(col(\"ID Proveedor\")))\r\n    )\r\n    df = df.withColumn(\"nombre_proveedor\",\r\n        trim(col(\"Nombre Proveedor\"))\r\n    )\r\n    df = df.withColumn(\"tipo_energia\",\r\n        upper(trim(col(\"Tipo de Energía\")))          # EÓLICA / HIDROELÉCTRICA / NUCLEAR\r\n    )\r\n    df = df.withColumn(\"pais\",\r\n        trim(upper(col(\"País\")))\r\n    )\r\n\r\n    # 4. Capacidad como número entero\r\n    df = df.withColumn(\"capacidad_mw\",\r\n        col(\"Capacidad (MW)\").cast(IntegerType())\r\n    )\r\n\r\n    # 5. Estandarizar estado: Activo / Inactivo\r\n    df = df.withColumn(\"estado\",\r\n        when(upper(trim(col(\"Estado\"))) == \"ACTIVO\",    \"Activo\")\r\n        .when(upper(trim(col(\"Estado\"))) == \"INACTIVO\", \"Inactivo\")\r\n        .otherwise(\"Desconocido\")\r\n    )\r\n\r\n    # 6. Clasificar por tipo de energía\r\n    df = df.withColumn(\"categoria_energia\",\r\n        when(col(\"tipo_energia\") == \"EÓLICA\",          \"Renovable\")\r\n        .when(col(\"tipo_energia\") == \"HIDROELÉCTRICA\", \"Renovable\")\r\n        .when(col(\"tipo_energia\") == \"NUCLEAR\",        \"No renovable\")\r\n        .otherwise(\"Otra\")\r\n    )\r\n\r\n    # 7. Rellenar nulos no críticos\r\n    df = df.fillna({\r\n        \"pais\":         \"DESCONOCIDO\",\r\n        \"capacidad_mw\": 0\r\n    })\r\n\r\n    # 8. Seleccionar columnas finales renombradas\r\n    df = df.select(\r\n        \"id_proveedor\",\r\n        \"nombre_proveedor\",\r\n        \"tipo_energia\",\r\n        \"categoria_energia\",\r\n        \"pais\",\r\n        \"capacidad_mw\",\r\n        \"estado\"\r\n    )\r\n\r\n    logger.info(f\"[{nombre}] PROCESADO: {df.count():,} registros\")\r\n    guardar_parquet(df, S3_PROC_PROVEEDORES, [\"tipo_energia\"], nombre)\r\n\r\n\r\n# =============================================================================\r\n# 2. CLIENTES\r\n#    Columnas: Tipo de Identificación, Número de Identificación,\r\n#              Nombre Completo, Ciudad, Departamento, Correo Electrónico\r\n# =============================================================================\r\n\r\ndef transformar_clientes():\r\n    nombre = \"CLIENTES\"\r\n    df = leer_csv(S3_RAW_CLIENTES, nombre)\r\n\r\n    # 1. Eliminar duplicados\r\n    df = df.dropDuplicates()\r\n\r\n    # 2. Filtrar nulos en campos críticos\r\n    df = df.filter(\r\n        col(\"Número de Identificación\").isNotNull() &\r\n        col(\"Nombre Completo\").isNotNull()\r\n    )\r\n\r\n    # 3. Estandarizar tipo de identificación: CC / NIT / CE\r\n    df = df.withColumn(\"tipo_identificacion\",\r\n        upper(trim(col(\"Tipo de Identificación\")))\r\n    )\r\n\r\n    # 4. Limpiar identificación — quitar guiones (ej: NIT 900123456-1 → 9001234561)\r\n    df = df.withColumn(\"identificacion\",\r\n        regexp_replace(col(\"Número de Identificación\"), \"[^0-9]\", \"\")\r\n    )\r\n\r\n    # 5. Validar longitud mínima de identificación (mínimo 7 dígitos)\r\n    df = df.withColumn(\"id_valido\",\r\n        when(length(col(\"identificacion\")) >= 7, True).otherwise(False)\r\n    )\r\n\r\n    # 6. Limpiar nombre completo\r\n    df = df.withColumn(\"nombre_completo\",\r\n        trim(col(\"Nombre Completo\"))\r\n    )\r\n\r\n    # 7. Normalizar ciudad y departamento\r\n    df = df.withColumn(\"ciudad\",\r\n        trim(upper(col(\"Ciudad\")))\r\n    )\r\n    df = df.withColumn(\"departamento\",\r\n        trim(upper(col(\"Departamento\")))\r\n    )\r\n\r\n    # 8. Email a minúsculas y sin espacios\r\n    df = df.withColumn(\"correo_electronico\",\r\n        trim(lower(col(\"Correo Electrónico\")))\r\n    )\r\n\r\n    # 9. Clasificar persona natural vs empresa\r\n    df = df.withColumn(\"es_empresa\",\r\n        when(col(\"tipo_identificacion\") == \"NIT\", True).otherwise(False)\r\n    )\r\n\r\n    # 10. Rellenar nulos no críticos\r\n    df = df.fillna({\r\n        \"ciudad\":             \"DESCONOCIDA\",\r\n        \"departamento\":       \"DESCONOCIDO\",\r\n        \"correo_electronico\": \"SIN_CORREO\"\r\n    })\r\n\r\n    # 11. Seleccionar columnas finales\r\n    df = df.select(\r\n        \"tipo_identificacion\",\r\n        \"identificacion\",\r\n        \"id_valido\",\r\n        \"nombre_completo\",\r\n        \"ciudad\",\r\n        \"departamento\",\r\n        \"correo_electronico\",\r\n        \"es_empresa\"\r\n    )\r\n\r\n    logger.info(f\"[{nombre}] PROCESADO: {df.count():,} registros\")\r\n    guardar_parquet(df, S3_PROC_CLIENTES, [\"departamento\"], nombre)\r\n\r\n\r\n# =============================================================================\r\n# 3. TRANSACCIONES\r\n#    Columnas: ID Transacción, Fecha, Tipo de Transacción,\r\n#              Nombre Cliente/Proveedor, Tipo de Energía,\r\n#              Cantidad (MWh), Precio Unitario (COP), Total (COP)\r\n# =============================================================================\r\n\r\ndef transformar_transacciones():\r\n    nombre = \"TRANSACCIONES\"\r\n    df = leer_csv(S3_RAW_TRANSACCIONES, nombre)\r\n\r\n    # 1. Eliminar duplicados\r\n    df = df.dropDuplicates()\r\n\r\n    # 2. Filtrar nulos en campos críticos\r\n    df = df.filter(\r\n        col(\"ID Transacción\").isNotNull() &\r\n        col(\"Fecha\").isNotNull() &\r\n        col(\"Tipo de Transacción\").isNotNull()\r\n    )\r\n\r\n    # 3. Estandarizar ID transacción\r\n    df = df.withColumn(\"id_transaccion\",\r\n        trim(upper(col(\"ID Transacción\")))\r\n    )\r\n\r\n    # 4. Estandarizar fechas — soporta múltiples formatos\r\n    df = df.withColumn(\"fecha_transaccion\",\r\n        coalesce(\r\n            to_date(col(\"Fecha\"), \"yyyy-MM-dd\"),\r\n            to_date(col(\"Fecha\"), \"dd/MM/yyyy\"),\r\n            to_date(col(\"Fecha\"), \"MM-dd-yyyy\"),\r\n            to_date(col(\"Fecha\"), \"yyyy/MM/dd\")\r\n        )\r\n    )\r\n\r\n    # 5. Estandarizar tipo de transacción: VENTA / COMPRA\r\n    df = df.withColumn(\"tipo_transaccion\",\r\n        upper(trim(col(\"Tipo de Transacción\")))\r\n    )\r\n\r\n    # 6. Limpiar nombre cliente/proveedor\r\n    df = df.withColumn(\"nombre_cliente_proveedor\",\r\n        trim(col(\"Nombre Cliente/Proveedor\"))\r\n    )\r\n\r\n    # 7. Estandarizar tipo de energía\r\n    df = df.withColumn(\"tipo_energia\",\r\n        upper(trim(col(\"Tipo de Energía\")))\r\n    )\r\n\r\n    # 8. Convertir cantidad y precio a numérico\r\n    df = df.withColumn(\"cantidad_mwh\",\r\n        regexp_replace(col(\"Cantidad (MWh)\"), \"[^0-9.]\", \"\").cast(DoubleType())\r\n    )\r\n    df = df.withColumn(\"precio_unitario_cop\",\r\n        regexp_replace(col(\"Precio Unitario (COP)\"), \"[^0-9.]\", \"\").cast(DoubleType())\r\n    )\r\n\r\n    # 9. Calcular total — Total (COP) viene vacío en el CSV,\r\n    #    se recalcula desde cantidad × precio_unitario\r\n    df = df.withColumn(\"total_cop\",\r\n        spark_round(col(\"cantidad_mwh\") * col(\"precio_unitario_cop\"), 0)\r\n    )\r\n\r\n    # 10. Columnas derivadas de fecha para particionado y análisis\r\n    df = df.withColumn(\"anio\", year(col(\"fecha_transaccion\")))\r\n    df = df.withColumn(\"mes\",  month(col(\"fecha_transaccion\")))\r\n\r\n    # 11. Clasificar categoría de energía\r\n    df = df.withColumn(\"categoria_energia\",\r\n        when(col(\"tipo_energia\") == \"EÓLICA\",          \"Renovable\")\r\n        .when(col(\"tipo_energia\") == \"HIDROELÉCTRICA\", \"Renovable\")\r\n        .when(col(\"tipo_energia\") == \"NUCLEAR\",        \"No renovable\")\r\n        .otherwise(\"Otra\")\r\n    )\r\n\r\n    # 12. Seleccionar columnas finales\r\n    df = df.select(\r\n        \"id_transaccion\",\r\n        \"fecha_transaccion\",\r\n        \"tipo_transaccion\",\r\n        \"nombre_cliente_proveedor\",\r\n        \"tipo_energia\",\r\n        \"categoria_energia\",\r\n        \"cantidad_mwh\",\r\n        \"precio_unitario_cop\",\r\n        \"total_cop\",\r\n        \"anio\",\r\n        \"mes\"\r\n    )\r\n\r\n    logger.info(f\"[{nombre}] PROCESADO: {df.count():,} registros\")\r\n    guardar_parquet(df, S3_PROC_TRANSACCIONES, [\"anio\", \"mes\"], nombre)\r\n\r\n\r\n# =============================================================================\r\n# EJECUCIÓN PRINCIPAL\r\n# =============================================================================\r\n\r\nlogger.info(\"=\" * 60)\r\nlogger.info(\"INICIO JOB ETL — Pipeline Energía\")\r\nlogger.info(\"=\" * 60)\r\n\r\ntry:\r\n    logger.info(\">>> [1/3] Procesando PROVEEDORES...\")\r\n    transformar_proveedores()\r\n\r\n    logger.info(\">>> [2/3] Procesando CLIENTES...\")\r\n    transformar_clientes()\r\n\r\n    logger.info(\">>> [3/3] Procesando TRANSACCIONES...\")\r\n    transformar_transacciones()\r\n\r\n    logger.info(\"=\" * 60)\r\n    logger.info(\"JOB COMPLETADO EXITOSAMENTE\")\r\n    logger.info(\"=\" * 60)\r\n\r\nexcept Exception as e:\r\n    logger.error(f\"ERROR en el job ETL: {str(e)}\")\r\n    raise e\r\n\r\nfinally:\r\n    job.commit()\r\n"
+}
